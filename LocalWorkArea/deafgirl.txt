@@ -1,0 +1,17 @@
+8/8/2018
+make an program that does TTS and works on other people's computers
+
+
+[]make textbox
+[]make button
+[]load tts engine boy
+[]load go-thru-mic-boy
+[]run text thru mic from box
+
+[]make it work on other peoples computer
+	[]test an henloworld run on lucias computer
+
+
+
+
+
