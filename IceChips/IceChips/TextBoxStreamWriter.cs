@@ -25,7 +25,7 @@ namespace IceChips
         // Passed: the Dispatcher object from your wpf Window, & your wpf textbox control
         // Return: new TextBoxStreamWriter object
         /////////////////////////////////////////////////////////////////////
-        public TextBoxStreamWriter(Dispatcher dispatcher, TextBox output)
+        public TextBoxStreamWriter(Dispatcher dispatcher, TextBox output, bool stebinpipe1=false)
         {
             txtBoxOutput = output;
             StandardOut = new StreamWriter(Console.OpenStandardOutput())
@@ -33,7 +33,12 @@ namespace IceChips
                 AutoFlush = true
             };
             this.Dispatcher = dispatcher;
-            Console.SetOut(this);
+            if (stebinpipe1)
+            {
+                StebinPipe1.SetOut(this);
+            }
+            else
+                Console.SetOut(this);
         }
         ////////////////////////////////////////////////////////////////////
         // Description: overriding TextWriter parent method; writes character
@@ -44,7 +49,7 @@ namespace IceChips
         public override void Write(char value)
         {
             base.Write(value);
-            StandardOut.Write(value);
+            StandardOut.Write(value);//write back to screen
             Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.SystemIdle,
                 (Action)(() =>
                 {

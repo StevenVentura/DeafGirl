@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:IceChips"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800"
+        Closing="Window_Closing"
         >
     <Grid>
         <ComboBox x:Name="VoiceSelector" HorizontalAlignment="Left" Margin="163,78,0,0" VerticalAlignment="Top" Width="120"/>
@@ -13,8 +14,9 @@
         <Button Content=":3c" x:Name="IsraelNuke" HorizontalAlignment="Left" Margin="163,0,0,236" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
         <TextBox x:Name="Richy" HorizontalAlignment="Left" Height="45" Margin="163,0,0,356" TextWrapping="Wrap" Text="Henlo" VerticalAlignment="Bottom" Width="185"/>
         <TextBox x:Name="OutputBoxHandle" HorizontalAlignment="Right" Height="76" Margin="0,0,428,275" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Width="201"/>
-        <CheckBox Content="me Listen too" HorizontalAlignment="Left" Margin="163,127,0,0" VerticalAlignment="Top"/>
-        <CheckBox Content="auto moonbase" HorizontalAlignment="Left" Margin="163,148,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="LucciHear" Content="me Listen too" HorizontalAlignment="Left" Margin="163,127,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="MoonbaseCheckbox" Content="auto moonbase" HorizontalAlignment="Left" Margin="163,148,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="Ab0rt" Content="ab0rt" HorizontalAlignment="Left" Margin="163,348,0,0" VerticalAlignment="Top" Width="75"/>
 
     </Grid>
 </Window>

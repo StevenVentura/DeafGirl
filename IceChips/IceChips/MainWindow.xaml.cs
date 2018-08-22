@@ -15,6 +15,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SharpTalk;
 using System.Threading;
+using System.Diagnostics;
+using WindowScrape.Static;
 
 namespace IceChips
 {
@@ -62,9 +64,18 @@ LOOOOOOOO
             }
             return meme;
         }
+        private void StebinLog(object o)
+        {
+            StebinPipe1.WriteLine(o.ToString());
+        }
+        //private Process attachToThisProcess = null;
+        //private IntPtr hwnd = new IntPtr();
+        private WindowScrape.Types.HwndObject hwndobject = null;
+        bool firstboy = true;
         private void begin()
         {
             TextBoxStreamWriter t = new TextBoxStreamWriter(this.Dispatcher, OutputBoxHandle);
+            TextBoxStreamWriter stebinpipelol = new TextBoxStreamWriter(this.Dispatcher, Richy, true);
             foreach (var value in Enum.GetValues(typeof(TtsVoice)))
                 VoiceSelector.Items.Add(value);
             VoiceSelector.SelectedIndex = 0;
@@ -72,8 +83,14 @@ LOOOOOOOO
            {
                while (true)
                {
+                   Thread.Sleep(250);
+                   if (firstboy)
+                   {
+                       firstboy = false;
+                       var hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
+                       hwndobject.Location = new System.Drawing.Point(0, 0);
 
-
+                   }
 
 
                }
@@ -83,6 +100,7 @@ LOOOOOOOO
         {
             Console.WriteLine(o.ToString());
         }
+        
         double percentagevolume;
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -92,22 +110,70 @@ LOOOOOOOO
 
                 switch (button.Name)
                 {
+                    case "Ab0rt":
+
+                        break;
                     case "IsraelNuke":
 
                         var text = Richy.Text;
                         //save as a sound file
-                        const string fileName = "abusedFile.wav";
+                        const string abusedFile = "abusedFile.wav";
                         using (var tts = new FonixTalkEngine())
                         {
 
                             tts.Voice = (TtsVoice)Enum.Parse(typeof(TtsVoice), VoiceSelector.Text);
 
 
-                            tts.SpeakToWavFile(fileName, text);
+                            tts.SpeakToWavFile(abusedFile, text);
+                        }
+
+                        if (LucciHear.IsChecked == true)
+                        {
+                            //System.IO.File.Copy(abusedFile, "copyboy", true);
+                            //playback on speaker
+                            string SelectedName = abusedFile;
+                        Thread thread = new Thread(new ParameterizedThreadStart((__SelectedName) =>
+                        {
+                            string _SelectedName = (string)__SelectedName;
+                            //https://github.com/naudio/NAudio
+                            try
+                            {
+                                using (var audioFile = new AudioFileReader(_SelectedName))
+                                {
+                                    int selDevice = -1;
+                                    for (int n = -1; n < WaveOut.DeviceCount; n++)
+                                    {
+                                        var caps = WaveOut.GetCapabilities(n);
+                                        if (caps.ProductName.Contains("Headset Earphone"))
+                                        {
+                                            selDevice = n;
+                                            break;
+                                        }
+                                    }
+                                    using (var outputDevice = new WaveOutEvent()
+                                    {
+                                        DeviceNumber = selDevice
+                                    })
+                                    {
+
+                                        outputDevice.Init(audioFile);
+                                        outputDevice.Volume = (float)percentagevolume;
+                                        outputDevice.Play();
+                                        while (outputDevice.PlaybackState == PlaybackState.Playing)
+                                        {
+                                            Thread.Sleep(1000);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (System.Runtime.InteropServices.COMException e3)
+                            { Console.WriteLine(e3); }
+                        }));
+                        thread.Start(SelectedName);
                         }
                         //////////
                         //now output from the sound file
-                        using (var audioFile = new AudioFileReader(fileName))
+                        using (var audioFile = new AudioFileReader(abusedFile))
                         {
                             int selDevice = -1;
                             for (int n = -1; n < WaveOut.DeviceCount; n++)
@@ -153,6 +219,11 @@ LOOOOOOOO
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             percentagevolume = shroud.Value / 10.0;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Environment.Exit(0);
         }
     }
 }
