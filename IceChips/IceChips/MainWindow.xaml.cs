@@ -21,6 +21,8 @@ using System.Windows.Threading;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using BotPS2;
+using Gma.System.MouseKeyHook;
+using System.Windows.Forms;
 
 namespace IceChips
 {
@@ -52,7 +54,6 @@ LOOOOOOOO
         private void OnLoad(object o1, object o2)
         {
             this.begin();
-            Keyboard.debug();
         }
         private string memetext(string boring)
         {
@@ -78,57 +79,61 @@ LOOOOOOOO
         private WindowScrape.Types.HwndObject hwndobject = null;
         bool firstboy = true;
 
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetKeyboardState(byte[] lpKeyState);
 
-        public static class Keyboard
+       
+        private IKeyboardMouseEvents m_GlobalHook;
+
+        public void Subscribe()
         {
-            public static byte[] keys = new byte[256];
-            public static bool[] KeyPressedUniqueFlagDropMeManually = new bool[256];
-            public static bool[] KeyReleasedUniqueFlagDropMeManually = new bool[256];
-            public static bool[] KeyDown = new bool[256];
+            // Note: for the application hook, use the Hook.AppEvents() instead
+            m_GlobalHook = Hook.GlobalEvents();
 
-            public static void debug()
+           // m_GlobalHook.MouseDownExt += GlobalHookMouseDownExt;
+            m_GlobalHook.KeyPress += GlobalHookKeyPress;
+            m_GlobalHook.KeyDown += GlobalHookKeyDown;
+            m_GlobalHook.KeyUp += GlobalHookKeyUp;
+           
+    }
+        private void GlobalHookKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            var x = e.KeyCode;
+            if (x == Keys.RShiftKey)
             {
-                PollKeyboard();
-                for (int i = 0; i < 256; i++)
-                {
-
-                    byte key = keys[i];
-                    if (key == 128)
-                    {
-                        if (KeyDown[i] == false)
-                            KeyPressedUniqueFlagDropMeManually[i] = true;
-                        KeyDown[i] = true;
-                    }
-                    else
-                    {
-                        if (KeyDown[i] == true)
-                            KeyReleasedUniqueFlagDropMeManually[i] = true;
-                        KeyDown[i] = false;
-                    }
-                    Console.WriteLine(i + ":" + key);
-                    //Logical 'and' so we can drop the low-order bit for toggled keys, else that key will appear with the value 1!
-                    if ((key & 0x80) != 0)
-                    {
-                        
-                    }
-                }
+                attachboy.Show();
             }
-
-            public static void PollKeyboard()
+            Console.WriteLine("KeyUp: \t{0}", e.KeyCode);
+        }
+        private void GlobalHookKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            var x = e.KeyCode;
+            if (x == Keys.RShiftKey)
             {
-
-                //Get pressed keys
-                if (!GetKeyboardState(keys))
-                {
-                    int err = Marshal.GetLastWin32Error();
-                    throw new Win32Exception(err);
-                }
-
-                
+                attachboy.Hide();
             }
+            Console.WriteLine("KeyDown: \t{0}", e.KeyCode);
+        }
+
+
+        private void GlobalHookKeyPress(object sender, KeyPressEventArgs e)
+        {
+            Console.WriteLine("KeyPress: \t{0}", e.KeyChar);
+        }
+
+        private void GlobalHookMouseDownExt(object sender, MouseEventExtArgs e)
+        {
+            Console.WriteLine("MouseDown: \t{0}; \t System Timestamp: \t{1}", e.Button, e.Timestamp);
+
+            // uncommenting the following line will suppress the middle mouse button click
+            // if (e.Buttons == MouseButtons.Middle) { e.Handled = true; }
+        }
+
+        public void Unsubscribe()
+        {
+            m_GlobalHook.MouseDownExt -= GlobalHookMouseDownExt;
+            m_GlobalHook.KeyPress -= GlobalHookKeyPress;
+
+            //It is recommened to dispose it
+            m_GlobalHook.Dispose();
         }
 
         //namespace PInvokeSample
@@ -142,6 +147,7 @@ LOOOOOOOO
 
         //    }
         //}
+        private AttachWindow attachboy;
         private void begin()
         {
             //TextBoxStreamWriter t = new TextBoxStreamWriter(this.Dispatcher, OutputBoxHandle);
@@ -149,51 +155,25 @@ LOOOOOOOO
             foreach (var value in Enum.GetValues(typeof(TtsVoice)))
                 VoiceSelector.Items.Add(value);
             VoiceSelector.SelectedIndex = 0;
-            Thread ffsomfg =
-            new Thread(new ThreadStart(() =>
-           {
-               while (true)
-               {
-                   Thread.Sleep(250);
-                   if (firstboy)
-                   {
-                       firstboy = false;
-                       //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
-                       var hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
-                       AttachWindow attachboy = new AttachWindow();
-                       attachboy.Closed += (s, e) =>
-                       Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
-                       attachboy.Show();
-                       System.Windows.Threading.Dispatcher.Run();
-                       attachboy.AttachTo(hwndobject);
+            attachboy = new AttachWindow();
+            Subscribe();
+          
+            //firstboy = false;
+            //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
+            var hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
+           
+
+                attachboy.Show();
+
+                attachboy.AttachTo(hwndobject);
+           
+            Console.Error.WriteLine("?>??????????");
+
                       
-                       Console.Error.WriteLine("?>??????????");
-                       
-                       //https://social.msdn.microsoft.com/Forums/en-US/0a6a1187-d994-4916-b57b-9674b87cee36/distinguish-between-left-and-right-shift-keys-in-c?forum=Vsexpressvcs
-                       while (true)
-                       {
-                           
-                           if (Keyboard.KeyPressedUniqueFlagDropMeManually[VKeys.VK_LSHIFT])
-                           {
-                               attachboy.Show();
-                               Keyboard.KeyPressedUniqueFlagDropMeManually[VKeys.VK_LSHIFT] = false;
-
-                           }
-                           else if (Keyboard.KeyReleasedUniqueFlagDropMeManually[VKeys.VK_LSHIFT])
-                           {
-                               attachboy.Hide();
-                               Keyboard.KeyReleasedUniqueFlagDropMeManually[VKeys.VK_LSHIFT] = false;
-                           }
-
-                       }
-                   }
+                   
 
 
-               }
-           }));
-            ffsomfg.SetApartmentState(ApartmentState.STA);
-            ffsomfg.IsBackground = true;
-            ffsomfg.Start();
+             
         }
         private void Log(object o)
         {
