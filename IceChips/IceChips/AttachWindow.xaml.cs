@@ -33,6 +33,17 @@ namespace IceChips
         {
             StebinPipe1.WriteLine(o.ToString());
         }
+        public void FixLocation()
+        {
+            this.Top = this.hwndobject.Location.Y;
+            this.Left = this.hwndobject.Location.X;
+            this.Topmost = true;
+        }
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            Window window = (Window)sender;
+            window.Topmost = true;
+        }
 
         //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
         public WindowScrape.Types.HwndObject hwndobject;

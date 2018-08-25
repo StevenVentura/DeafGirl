@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IceChips"
         mc:Ignorable="d"
-        Title="AttachWindow" Height="200" Width="300">
+        Title="AttachWindow" Height="100" Width="200"
+        Deactivated="Window_Deactivated">
     <Grid>
-        <TextBox x:Name="StebinTextBox" HorizontalAlignment="Left" Height="98" Margin="23,25,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="230"/>
+        <TextBox x:Name="StebinTextBox" HorizontalAlignment="Left" Height="70" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="192"/>
 
     </Grid>
 </Window>

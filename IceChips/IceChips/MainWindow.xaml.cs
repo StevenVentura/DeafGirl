@@ -23,6 +23,7 @@ using System.ComponentModel;
 using BotPS2;
 using Gma.System.MouseKeyHook;
 using System.Windows.Forms;
+using MouseKeyboardLibrary;
 
 namespace IceChips
 {
@@ -53,6 +54,19 @@ LOOOOOOOO
         }
         private void OnLoad(object o1, object o2)
         {
+            List<string> speakerlist = new List<string>();
+            for (int n = -1; n < WaveOut.DeviceCount; n++)
+            {
+                var caps = WaveOut.GetCapabilities(n);
+                Console.WriteLine(caps.ProductName);
+                speakerlist.Add(caps.ProductName);
+            }
+            SpeakerSelector.ItemsSource = speakerlist;
+
+            
+            MicSelector.ItemsSource = speakerlist;
+
+
             this.begin();
         }
         private string memetext(string boring)
@@ -99,24 +113,166 @@ LOOOOOOOO
             var x = e.KeyCode;
             if (x == Keys.RShiftKey)
             {
-                attachboy.Show();
+                PopDownAttachBoy();
             }
-            Console.WriteLine("KeyUp: \t{0}", e.KeyCode);
         }
+
+        private void PopUpAttachBoy()
+        {
+            attachboy.FixLocation();
+            attachboy.StebinTextBox.Text = "";
+            attachboy.Show();
+        }
+        private void PopDownAttachBoy()
+        {
+            attachboy.Hide();
+            //now speak the text!)
+            string text = (string)(attachboy.StebinTextBox.Text);
+
+//            hwndobject.
+
+            if (text == "")
+                return;
+            if (MoonbaseCheckbox.IsChecked == true)
+                text = memetext(text);
+
+            //save as a sound file
+            const string abusedFile = "abusedFile_overlay.wav";
+            using (var tts = new FonixTalkEngine())
+            {
+
+                tts.Voice = (TtsVoice)Enum.Parse(typeof(TtsVoice), VoiceSelector.Text);
+
+
+                tts.SpeakToWavFile(abusedFile, text);
+            }
+
+            if (OverlayPlaybackCheckbox.IsChecked == true)
+            {
+                //System.IO.File.Copy(abusedFile, "copyboy", true);
+                //playback on speaker
+                string SelectedName = abusedFile;
+                Thread thread = new Thread(new ParameterizedThreadStart((__SelectedName) =>
+                {
+                    string _SelectedName = (string)__SelectedName;
+                    //https://github.com/naudio/NAudio
+                    try
+                    {
+                        using (var audioFile = new AudioFileReader(_SelectedName))
+                        {
+                            int selDevice = -1;
+                            Dispatcher.BeginInvoke((Action)(() =>
+                            {
+                                for (int n = -1; n < WaveOut.DeviceCount; n++)
+                            {
+                                var caps = WaveOut.GetCapabilities(n);
+                                if (caps.ProductName.Equals((string)(SpeakerSelector.SelectedValue)))
+                                {
+                                    selDevice = n;
+                                    break;
+                                }
+                            }
+                            }));
+                            using (var outputDevice = new WaveOutEvent()
+                            {
+                                DeviceNumber = selDevice
+                            })
+                            {
+
+                                outputDevice.Init(audioFile);
+                                outputDevice.Volume = (float)percentagevolume;
+                                outputDevice.Play();
+                                while (outputDevice.PlaybackState == PlaybackState.Playing)
+                                {
+                                    Thread.Sleep(1000);
+                                }
+                            }
+                        }
+                    }
+                    catch (System.Runtime.InteropServices.COMException e3)
+                    { Console.WriteLine(e3); }
+                }));
+                thread.Start(SelectedName);
+            }
+
+           
+            //////////
+            //now output from the sound file
+            using (var audioFile = new AudioFileReader(abusedFile))
+            {
+                int selDevice = -1;
+                Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    for (int n = -1; n < WaveOut.DeviceCount; n++)
+                {
+                    var caps = WaveOut.GetCapabilities(n);
+                    if (caps.ProductName.Equals((string)(MicSelector.SelectedValue)))
+                    {
+                        selDevice = n;
+                        break;
+                    }
+                }
+                }));
+                using (var outputDevice = new WaveOutEvent()
+                {
+                    DeviceNumber = selDevice
+                })
+                {
+                    PressAppropriatePTTButton(true);
+                    outputDevice.Init(audioFile);
+                    outputDevice.Volume = (float)percentagevolume;
+                    outputDevice.Play();
+                    while (outputDevice.PlaybackState == PlaybackState.Playing)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    PressAppropriatePTTButton(false);
+                }
+            }
+            
+
+
+        }
+
         private void GlobalHookKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             var x = e.KeyCode;
+            
             if (x == Keys.RShiftKey)
             {
-                attachboy.Hide();
+                PopUpAttachBoy();
             }
-            Console.WriteLine("KeyDown: \t{0}", e.KeyCode);
+
+            if (x == Keys.Z)
+            {
+                //debug
+                //sendkeydown doesnt work
+                //cSendInput.SendKeyDown(cSendInput.VKeys.VK_P);
+                //Console.WriteLine((hwndobject.Hwnd));
+                //cSendInput.PostMessage_PressKeyDown((int)hwndobject.Hwnd, cSendInput.VKeys.VK_P, 0x190001);
+                
+                
+                e.Handled = true;
+            }
+
+            if (attachboy.IsVisible == true)
+            {
+                if ((int)x >= 65 && (int)x <= 90)
+                {
+                    attachboy.StebinTextBox.Text += e.KeyCode;
+                }
+                if ((int)x == VKeys.VK_SPACE)
+                {
+                    attachboy.StebinTextBox.Text += " ";
+                }
+            }
+
         }
 
 
         private void GlobalHookKeyPress(object sender, KeyPressEventArgs e)
         {
-            Console.WriteLine("KeyPress: \t{0}", e.KeyChar);
+            //Console.WriteLine("KeyPress: \t{0}", e.KeyChar);
         }
 
         private void GlobalHookMouseDownExt(object sender, MouseEventExtArgs e)
@@ -157,17 +313,14 @@ LOOOOOOOO
             VoiceSelector.SelectedIndex = 0;
             attachboy = new AttachWindow();
             Subscribe();
-          
+
             //firstboy = false;
             //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
-            var hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
-           
-
-                attachboy.Show();
-
-                attachboy.AttachTo(hwndobject);
-           
-            Console.Error.WriteLine("?>??????????");
+            //hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
+            hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Counter-Strike: Global Offensive");
+            //hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Untitled - Notepad");
+            attachboy.AttachTo(hwndobject);
+            
 
                       
                    
@@ -195,6 +348,8 @@ LOOOOOOOO
                     case "IsraelNuke":
 
                         var text = Richy.Text;
+                        if (MoonbaseCheckbox.IsChecked == true)
+                            text = memetext(text);
                         //save as a sound file
                         const string abusedFile = "abusedFile.wav";
                         using (var tts = new FonixTalkEngine())
@@ -220,15 +375,18 @@ LOOOOOOOO
                                 using (var audioFile = new AudioFileReader(_SelectedName))
                                 {
                                     int selDevice = -1;
+                                        Dispatcher.BeginInvoke((Action) (() =>
+                                       {
                                     for (int n = -1; n < WaveOut.DeviceCount; n++)
                                     {
                                         var caps = WaveOut.GetCapabilities(n);
-                                        if (caps.ProductName.Contains("Headset Earphone"))
-                                        {
-                                            selDevice = n;
-                                            break;
-                                        }
+                                           if (caps.ProductName.Equals((string)(SpeakerSelector.SelectedValue)))
+                                           {
+                                               selDevice = n;
+                                               break;
+                                           }
                                     }
+                                       }));
                                     using (var outputDevice = new WaveOutEvent()
                                     {
                                         DeviceNumber = selDevice
@@ -255,21 +413,24 @@ LOOOOOOOO
                         using (var audioFile = new AudioFileReader(abusedFile))
                         {
                             int selDevice = -1;
-                            for (int n = -1; n < WaveOut.DeviceCount; n++)
+                            Dispatcher.BeginInvoke((Action)(() =>
+                            {
+                                for (int n = -1; n < WaveOut.DeviceCount; n++)
                             {
                                 var caps = WaveOut.GetCapabilities(n);
-                                if (caps.ProductName.Contains("CABLE Input"))
+                                if (caps.ProductName.Equals((string)(MicSelector.SelectedValue)))
                                 {
                                     selDevice = n;
                                     break;
                                 }
                             }
+                            }));
                             using (var outputDevice = new WaveOutEvent()
                             {
                                 DeviceNumber = selDevice
                             })
                             {
-                                PressAppropriatePTTButton();
+                                PressAppropriatePTTButton(true);
                                 outputDevice.Init(audioFile);
                                 outputDevice.Volume = (float)percentagevolume;
                                 outputDevice.Play();
@@ -277,6 +438,7 @@ LOOOOOOOO
                                 {
                                     Thread.Sleep(1000);
                                 }
+                                PressAppropriatePTTButton(false);
                             }
                         }
                         break;
@@ -290,9 +452,19 @@ LOOOOOOOO
             }
         }
 
-        private void PressAppropriatePTTButton()
+        private void PressAppropriatePTTButton(bool down)
         {
-
+            //cSendInput.CurrentWindowText()
+            if (down == true)
+            {
+                //cSendInput.SendKeyDown(cSendInput.VKeys.VK_P);
+                KeyboardSimulator.KeyDown(Keys.P);
+            }
+            else
+            {
+                // cSendInput.SendKeyUp(cSendInput.VKeys.VK_P);
+                KeyboardSimulator.KeyUp(Keys.P);
+            }
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
