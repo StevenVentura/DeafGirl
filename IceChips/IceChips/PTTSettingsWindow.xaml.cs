@@ -29,12 +29,15 @@ namespace IceChips
         {
             InitializeComponent();
             this.mainwindowreference = mainwindowreference;
+            LoadPTTFromFile();
+            mainwindowreference.BindingBoys = BindingBoys.ToList();
             this.Loaded += OnLoad;
         }
         private void OnLoad(object o1, object o2)
         {
             populatewindowlist();
-            LoadPTTFromFile();
+            
+            
         }
 
         private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -52,17 +55,13 @@ namespace IceChips
                 if (!String.IsNullOrEmpty(process.MainWindowTitle))
                 {
                     //Console.WriteLine("Process: {0} ID: {1} Window title: {2}", process.ProcessName, process.Id, process.MainWindowTitle);
-                    windownames.Add(process.ProcessName);
+                    windownames.Add(process.MainWindowTitle);
                 }
             }
 
             WindowNameComboBox.ItemsSource = windownames;
         }
-        public class BindingBoy
-        {
-            public string WindowName { get; set; }
-            public string Binding { get; set; }
-        }
+        
         public void ButtonClickBoy(object sender, object uselessboy)
         {
             Button b = (Button)sender;
@@ -87,9 +86,19 @@ namespace IceChips
                     break;
                 case "SaveButton":
                     SavePTTToFile();
+                    mainwindowreference.BindingBoys = BindingBoys.ToList();
                     break;
                 case "CancelButton":
                     LoadPTTFromFile();
+                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING)
+                        mainwindowreference.sm_kp = MainWindow._sm_kp.NORMAL;
+                    this.Hide();
+
+                    break;
+                case "CloseButton":
+                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING)
+                        mainwindowreference.sm_kp = MainWindow._sm_kp.NORMAL;
+                    this.Hide();
                     break;
             }
         }

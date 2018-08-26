@@ -74,6 +74,7 @@
     <Compile Include="AttachWindow.xaml.cs">
       <DependentUpon>AttachWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BindingBoy.cs" />
     <Compile Include="BotPSTwo.cs" />
     <Compile Include="PTTSettingsWindow.xaml.cs">
       <DependentUpon>PTTSettingsWindow.xaml</DependentUpon>

@@ -48,6 +48,7 @@ LOOOOOOOO
     /// </summary>
     public partial class MainWindow : Window
     {
+        public List<BindingBoy> BindingBoys = new List<BindingBoy>();
         public MainWindow()
         {
             InitializeComponent();
@@ -81,6 +82,7 @@ LOOOOOOOO
                 SpeakerSelector.SelectedIndex = 0;
             if (MicSelector.SelectedIndex == -1)
                 MicSelector.SelectedIndex = 0;
+            CURRENT_VOICESELECTOR_VALUE = VoiceSelector.SelectedValue.ToString();
             CURRENT_MIC_VALUE = (string)(MicSelector.SelectedValue);
             CURRENT_SPEAKER_VALUE = (string)(SpeakerSelector.SelectedValue);
 
@@ -154,9 +156,6 @@ LOOOOOOOO
         {
             StebinPipe1.WriteLine(o.ToString());
         }
-        //private Process attachToThisProcess = null;
-        //private IntPtr hwnd = new IntPtr();
-        private WindowScrape.Types.HwndObject hwndobject = null;
         bool firstboy = true;
 
 
@@ -183,15 +182,22 @@ LOOOOOOOO
             }
         }
 
-        private void PopUpAttachBoy()
+        private void PopUpAttachBoy(IntPtr hwnd, BindingBoy b)
         {
+            attachboy.AttachTo(WindowScrape.Types.HwndObject.GetWindowByTitle(b.WindowName),
+                b);
             attachboy.FixLocation();
             attachboy.StebinTextBox.Text = "";
             attachboy.Show();
+            sm_kp = _sm_kp.TTSMODE;
         }
         private void PopDownAttachBoy()
         {
+            if (sm_kp != _sm_kp.TTSMODE) return;
             attachboy.Hide();
+            sm_kp = _sm_kp.NORMAL;
+            attachboy.hwndobject.SendMessage(WindowScrape.Constants.WM.ACTIVATE, 0, 0);
+            attachboy.hwndobject.SendMessage(WindowScrape.Constants.WM.SETFOCUS, 0, 0);
             //now speak the text!)
             string text = (string)(attachboy.StebinTextBox.Text);
 
@@ -202,103 +208,108 @@ LOOOOOOOO
             if (MoonbaseCheckbox.IsChecked == true)
                 text = memetext(text);
 
-            //save as a sound file
-            const string abusedFile = "abusedFile_overlay.wav";
-            using (var tts = new FonixTalkEngine())
-            {
+            PressAppropriatePTTButton(true);
 
-                tts.Voice = (TtsVoice)Enum.Parse(typeof(TtsVoice), VoiceSelector.Text);
+            new Thread(new ThreadStart(() =>
+           {
+                //save as a sound file
+                const string abusedFile = "abusedFile_overlay.wav";
+               using (var tts = new FonixTalkEngine())
+               {
+
+                   tts.Voice = (TtsVoice)Enum.Parse(typeof(TtsVoice), CURRENT_VOICESELECTOR_VALUE);
 
 
-                tts.SpeakToWavFile(abusedFile, text);
-            }
+                   tts.SpeakToWavFile(abusedFile, text);
+               }
 
-            if (OverlayPlaybackCheckbox.IsChecked == true)
-            {
-                //System.IO.File.Copy(abusedFile, "copyboy", true);
-                //playback on speaker
-                string SelectedName = abusedFile;
-                Thread thread = new Thread(new ParameterizedThreadStart((__SelectedName) =>
-                {
-                    string _SelectedName = (string)__SelectedName;
-                    //https://github.com/naudio/NAudio
-                    try
-                    {
-                        using (var audioFile = new AudioFileReader(_SelectedName))
-                        {
-                            int selDevice = -1;
-                            
-                            {
-                                for (int n = -1; n < WaveOut.DeviceCount; n++)
-                            {
-                                var caps = WaveOut.GetCapabilities(n);
-                                    if (caps.ProductName.StartsWith(CURRENT_SPEAKER_VALUE))
-                                {
-                                    selDevice = n;
-                                    break;
-                                }
-                            }
-                            }
-                            using (var outputDevice = new WaveOutEvent()
-                            {
-                                DeviceNumber = selDevice
-                            })
-                            {
+               if (OVERLAYPLAYBACKCHECKBOXCHECKED)
+               {
+                    //System.IO.File.Copy(abusedFile, "copyboy", true);
+                    //playback on speaker
+                    string SelectedName = abusedFile;
+                   Thread thread = new Thread(new ParameterizedThreadStart((__SelectedName) =>
+                   {
+                       string _SelectedName = (string)__SelectedName;
+                        //https://github.com/naudio/NAudio
+                        try
+                       {
+                           using (var audioFile = new AudioFileReader(_SelectedName))
+                           {
+                               int selDevice = -1;
 
-                                outputDevice.Init(audioFile);
-                                outputDevice.Volume = (float)percentagevolume;
-                                outputDevice.Play();
-                                while (outputDevice.PlaybackState == PlaybackState.Playing)
-                                {
-                                    Thread.Sleep(1000);
-                                }
-                            }
-                        }
-                    }
-                    catch (System.Runtime.InteropServices.COMException e3)
-                    { Console.WriteLine(e3); }
-                }));
-                thread.Start(SelectedName);
-            }
+                               {
+                                   for (int n = -1; n < WaveOut.DeviceCount; n++)
+                                   {
+                                       var caps = WaveOut.GetCapabilities(n);
+                                       if (caps.ProductName.StartsWith(CURRENT_SPEAKER_VALUE))
+                                       {
+                                           selDevice = n;
+                                           break;
+                                       }
+                                   }
+                               }
+                               using (var outputDevice = new WaveOutEvent()
+                               {
+                                   DeviceNumber = selDevice
+                               })
+                               {
 
-           
-            //////////
-            //now output from the sound file
-            using (var audioFile = new AudioFileReader(abusedFile))
-            {
-                int selDevice = -1;
-                
-                {
-                    for (int n = -1; n < WaveOut.DeviceCount; n++)
-                {
-                    var caps = WaveOut.GetCapabilities(n);
-                    if (caps.ProductName.StartsWith(CURRENT_MIC_VALUE))
-                    {
-                        selDevice = n;
-                        break;
-                    }
-                }
-                }
-                using (var outputDevice = new WaveOutEvent()
-                {
-                    DeviceNumber = selDevice
-                })
-                {
-                    PressAppropriatePTTButton(true);
-                    outputDevice.Init(audioFile);
-                    outputDevice.Volume = (float)percentagevolume;
-                    outputDevice.Play();
-                    while (outputDevice.PlaybackState == PlaybackState.Playing)
-                    {
-                        Thread.Sleep(1000);
-                    }
-                    PressAppropriatePTTButton(false);
-                }
-            }
-            
+                                   outputDevice.Init(audioFile);
+                                   outputDevice.Volume = (float)percentagevolume;
+                                   outputDevice.Play();
+                                   while (outputDevice.PlaybackState == PlaybackState.Playing)
+                                   {
+                                       Thread.Sleep(1000);
+                                   }
+                               }
+                           }
+                       }
+                       catch (System.Runtime.InteropServices.COMException e3)
+                       { Console.WriteLine(e3); }
+                   }));
+                   thread.Start(SelectedName);
+               }
 
+
+                //////////
+                //now output from the sound file
+                using (var audioFile = new AudioFileReader(abusedFile))
+               {
+                   int selDevice = -1;
+
+                   {
+                       for (int n = -1; n < WaveOut.DeviceCount; n++)
+                       {
+                           var caps = WaveOut.GetCapabilities(n);
+                           if (caps.ProductName.StartsWith(CURRENT_MIC_VALUE))
+                           {
+                               selDevice = n;
+                               break;
+                           }
+                       }
+                   }
+                   using (var outputDevice = new WaveOutEvent()
+                   {
+                       DeviceNumber = selDevice
+                   })
+                   {
+                       
+                       outputDevice.Init(audioFile);
+                       outputDevice.Volume = (float)percentagevolume;
+                       outputDevice.Play();
+                       while (outputDevice.PlaybackState == PlaybackState.Playing)
+                       {
+                           Thread.Sleep(1000);
+                       }
+                       PressAppropriatePTTButton(false);
+                   }
+               }
+
+           })).Start();
 
         }
+        
         private PTTSettingsWindow pttSettingsWindow = null;
 
         private void GlobalHookKeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
@@ -307,16 +318,45 @@ LOOOOOOOO
 
             switch (sm_kp)
             {
+                case _sm_kp.TTSMODE:
+                    if ((int)x >= 65 && (int)x <= 90)
+                    {
+                        attachboy.StebinTextBox.Text += e.KeyCode;
+                    }
+                    if ((int)x == VKeys.VK_SPACE)
+                    {
+                        attachboy.StebinTextBox.Text += " ";
+                    }
+                    e.Handled = true;
+                    break;
                 case _sm_kp.GET_BINDING:
-                    pttSettingsWindow.KeyBindingTextBox.Text = ""+e.KeyCode;
+                    pttSettingsWindow.KeyBindingTextBox.Text = "" + e.KeyValue;
                     sm_kp = _sm_kp.NORMAL;
                     e.Handled = true;
                     break;
 
                 case _sm_kp.NORMAL:
+                    
                     if (x == Keys.RShiftKey)
                     {
-                        PopUpAttachBoy();
+                        var foreground = cSendInput.GetForegroundWindow();
+                        int length = cSendInput.GetWindowTextLength(foreground);
+                        StringBuilder lpString = new StringBuilder(length + 1);
+                        cSendInput.GetWindowText(foreground,
+                             lpString,
+                            lpString.Capacity);
+
+                        foreach (var b in BindingBoys)
+                        {
+                            
+                            if (b.WindowName == lpString.ToString())
+                            {
+                                
+                                PopUpAttachBoy(foreground, b);
+                            }
+                        }
+
+                        
                     }
 
                     if (x == Keys.Z)
@@ -324,24 +364,13 @@ LOOOOOOOO
                         //debug
                         //sendkeydown doesnt work
                         //cSendInput.SendKeyDown(cSendInput.VKeys.VK_P);
-                        //Console.WriteLine((hwndobject.Hwnd));
                         //cSendInput.PostMessage_PressKeyDown((int)hwndobject.Hwnd, cSendInput.VKeys.VK_P, 0x190001);
 
 
                         e.Handled = true;
                     }
 
-                    if (attachboy.IsVisible == true)
-                    {
-                        if ((int)x >= 65 && (int)x <= 90)
-                        {
-                            attachboy.StebinTextBox.Text += e.KeyCode;
-                        }
-                        if ((int)x == VKeys.VK_SPACE)
-                        {
-                            attachboy.StebinTextBox.Text += " ";
-                        }
-                    }
+                    
 
                     break;
             }
@@ -395,11 +424,7 @@ LOOOOOOOO
 
             //firstboy = false;
             //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
-            //hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Realm of the Mad God");
-            hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Counter-Strike: Global Offensive");
-            //hwndobject = WindowScrape.Types.HwndObject.GetWindowByTitle("Untitled - Notepad");
-            attachboy.AttachTo(hwndobject);
-
+            
 
             STILL_LOADING_BTW = false;
 
@@ -516,7 +541,7 @@ LOOOOOOOO
                                 DeviceNumber = selDevice
                             })
                             {
-                                PressAppropriatePTTButton(true);
+                               // PressAppropriatePTTButton(true);
                                 outputDevice.Init(audioFile);
                                 outputDevice.Volume = (float)percentagevolume;
                                 outputDevice.Play();
@@ -524,7 +549,7 @@ LOOOOOOOO
                                 {
                                     Thread.Sleep(1000);
                                 }
-                                PressAppropriatePTTButton(false);
+                              //  PressAppropriatePTTButton(false);
                             }
                         }
                         break;
@@ -541,20 +566,22 @@ LOOOOOOOO
         {
             GET_BINDING,
             NORMAL,
+            TTSMODE
         } ;
         public _sm_kp sm_kp = _sm_kp.NORMAL;
         private void PressAppropriatePTTButton(bool down)
         {
-            //cSendInput.CurrentWindowText()
+            ////cSendInput.CurrentWindowText()
             if (down == true)
             {
                 //cSendInput.SendKeyDown(cSendInput.VKeys.VK_P);
-                KeyboardSimulator.KeyDown(Keys.P);
+                w("it is " + ((cSendInput.VKeys)Enum.Parse(typeof(cSendInput.VKeys), attachboy.bind_boy.Binding)));
+                cSendInput.SendHardwareKeyDown((cSendInput.VKeys)Enum.Parse(typeof(cSendInput.VKeys), attachboy.bind_boy.Binding));
             }
             else
             {
                 // cSendInput.SendKeyUp(cSendInput.VKeys.VK_P);
-                KeyboardSimulator.KeyUp(Keys.P);
+                cSendInput.SendHardwareKeyUp((cSendInput.VKeys)Enum.Parse(typeof(cSendInput.VKeys), attachboy.bind_boy.Binding));
             }
         }
 
@@ -679,24 +706,30 @@ LOOOOOOOO
             CURRENT_MIC_VALUE = (string)(MicSelector.SelectedValue);
             SaveSettingsToFile();
         }
-
+        private string CURRENT_VOICESELECTOR_VALUE;
         private void VoiceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            CURRENT_VOICESELECTOR_VALUE = (string)(VoiceSelector.SelectedValue);
             SaveSettingsToFile();
         }
-
+        private bool OVERLAYPLAYBACKCHECKBOXCHECKED = false;
         private void OverlayPlaybackCheckbox_Checked(object sender, RoutedEventArgs e)
         {
+            OVERLAYPLAYBACKCHECKBOXCHECKED = OverlayPlaybackCheckbox.IsChecked == true;
             SaveSettingsToFile();
         }
 
+        private bool LUCCIHEARCHECKED = false;
         private void LucciHear_Checked(object sender, RoutedEventArgs e)
         {
+            LUCCIHEARCHECKED = LucciHear.IsChecked == true;
             SaveSettingsToFile();
         }
 
+        private bool MOONBASECHECKED = false;
         private void MoonbaseCheckbox_Checked(object sender, RoutedEventArgs e)
         {
+            MOONBASECHECKED = LucciHear.IsChecked == true;
             SaveSettingsToFile();
         }
 

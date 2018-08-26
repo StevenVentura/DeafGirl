@@ -13,7 +13,7 @@
         <Slider x:Name="shroud" Value="10" HorizontalAlignment="Left" Margin="163,100,0,0" VerticalAlignment="Top" Width="201" ValueChanged="Slider_ValueChanged"/>
         <Button Content=":3c" x:Name="IsraelNuke" HorizontalAlignment="Left" Margin="163,0,0,236" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
         <TextBox x:Name="Richy" HorizontalAlignment="Left" Height="45" Margin="163,0,0,356" TextWrapping="Wrap" Text="Henlo" VerticalAlignment="Bottom" Width="185"/>
-        <TextBox x:Name="OutputBoxHandle" HorizontalAlignment="Right" Height="76" Margin="0,0,428,275" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Width="201"/>
+        <TextBox x:Name="OutputBoxHandle" Focusable="False" HorizontalAlignment="Right" Height="76" Margin="0,0,428,275" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Width="201"/>
         <CheckBox x:Name="LucciHear" Content="me Listen too" HorizontalAlignment="Left" Margin="163,127,0,0" VerticalAlignment="Top" Checked="LucciHear_Checked" Unchecked="LucciHear_Checked"/>
         <CheckBox x:Name="MoonbaseCheckbox" Content="auto moonbase" HorizontalAlignment="Left" Margin="163,148,0,0" VerticalAlignment="Top" Checked="MoonbaseCheckbox_Checked" Unchecked="MoonbaseCheckbox_Checked"/>
         <Button x:Name="Ab0rt" Content="ab0rt" HorizontalAlignment="Left" Margin="163,348,0,0" VerticalAlignment="Top" Width="75"/>

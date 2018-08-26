@@ -41,14 +41,16 @@ namespace IceChips
         }
         private void Window_Deactivated(object sender, EventArgs e)
         {
-            Window window = (Window)sender;
-            window.Topmost = true;
+            //Window window = (Window)sender;
+            //window.Topmost = true;
         }
 
         //https://github.com/DataDink/WindowScrape/blob/master/Source/WindowScrape/Types/HwndObject.cs
         public WindowScrape.Types.HwndObject hwndobject;
-        public void AttachTo(WindowScrape.Types.HwndObject hwndobject)
+        public BindingBoy bind_boy;
+        public void AttachTo(WindowScrape.Types.HwndObject hwndobject, BindingBoy Boy)
         {
+            this.bind_boy = Boy;
             this.hwndobject = hwndobject;
             this.Top = hwndobject.Location.Y;
             this.Left = hwndobject.Location.X;

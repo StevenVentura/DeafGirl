@@ -12,9 +12,128 @@ using System.Windows.Forms;
 /// 
 namespace BotPS2
 {
+    public class HardwareKeyboardInput
+    {
+        
+
+    }
     public class cSendInput
     {
         #region DLLImports
+
+        /*
+         * // W key
+
+        keybd_event(0x51, 0x11, 0, 0); //Key down
+        keybd_event(0x51, 0x11, KEYEVENTF_KEYUP, 0); //Key up
+        scan codes
+        https://msdn.microsoft.com/en-us/library/aa299374(v=vs.60).aspx
+         * */
+        //https://ourcodeworld.com/articles/read/520/simulating-keypress-in-the-right-way-using-inputsimulator-with-csharp-in-winforms
+        // Import the user32.dll
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+
+        public static byte GetHardwareScan(VKeys v)
+        {
+            switch (v)
+            {
+                //https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-6.0/aa299374(v=vs.60)
+                case VKeys.VK_ESCAPE:return 0x1;
+
+                case VKeys.VK_1:return 0x2;
+                case VKeys.VK_2:return 0x3;
+                case VKeys.VK_3:return 0x4;
+                case VKeys.VK_4:return 0x5;
+                case VKeys.VK_5:return 0x6;
+                case VKeys.VK_6:return 0x7;
+                case VKeys.VK_7:return 0x8;
+                case VKeys.VK_8:return 0x9;
+                case VKeys.VK_9:return 0xA;
+                case VKeys.VK_SUBTRACT:return 0xC;
+                case VKeys.VK_BACK: return 0xE;
+                case VKeys.VK_TAB: return 0xF;
+                case VKeys.VK_Q:return 0x10;
+                case VKeys.VK_W:return 0x11;
+                case VKeys.VK_E:return 0x12;
+                case VKeys.VK_R:return 0x13;
+                case VKeys.VK_T:return 0x14;
+                case VKeys.VK_Y:return 0x15;
+                case VKeys.VK_U: return 0x16;
+                case VKeys.VK_I: return 0x17;
+                case VKeys.VK_O: return 0x18;
+                case VKeys.VK_P: return 0x19;
+                case VKeys.VK_RETURN: return 0x1C;
+                case VKeys.VK_CONTROL: return 0x1D;
+                case VKeys.VK_A:return 0x1E;
+                case VKeys.VK_S:return 0x1F;
+                case VKeys.VK_D:return 0x20;
+                case VKeys.VK_F:return 0x21;
+                case VKeys.VK_G:return 0x22;
+                case VKeys.VK_H:return 0x23;
+                case VKeys.VK_J:return 0x24;
+                case VKeys.VK_K:return 0x25;
+                case VKeys.VK_L: return 0x26;
+                //case VKeys.VK_COLON: return 0x27;
+                //case VKeys.VK_QUOTE: return 0x28;
+                //case VKeys.VK_TILDE: return 0x29;
+                case VKeys.VK_LSHIFT: return 0x2A;
+                //case VKeys.VK_BACKSLASH: return 0x2B;
+                case VKeys.VK_Z: return 0x2C;
+                case VKeys.VK_X: return 0x2D;
+                case VKeys.VK_C: return 0x2E;
+                case VKeys.VK_V: return 0x2F;
+                case VKeys.VK_B: return 0x30;
+                case VKeys.VK_N: return 0x31;
+                case VKeys.VK_M: return 0x32;
+                //case VKeys.VK_COMMA: return 0x33;
+                case VKeys.VK_DECIMAL: return 0x34;
+                //case VKeys.VK_QUESTION: return 0x35;
+                case VKeys.VK_RSHIFT: return 0x36;
+                //case VKeys.VK_LALT: return 0x38;
+                //case VKeys.VK_RALT: return 0x38;
+                case VKeys.VK_SPACE: return 0x39;
+                case VKeys.VK_CAPITAL: return 0x3A;
+                case VKeys.VK_F1: return 0x3B;
+                case VKeys.VK_F2: return 0x3C;
+                case VKeys.VK_F3: return 0x3D;
+                case VKeys.VK_F4: return 0x3E;
+                case VKeys.VK_F5: return 0x3F;
+                case VKeys.VK_F6: return 0x40;
+                case VKeys.VK_F7: return 0x41;
+                case VKeys.VK_F8: return 0x42;
+                case VKeys.VK_F9: return 0x43;
+                case VKeys.VK_F10: return 0x44;
+                case VKeys.VK_F11: return 0x57;
+                case VKeys.VK_F12: return 0x58;
+                //case VKeys.NUMLOCK return 0x45;
+                case VKeys.VK_SCROLL: return 0x46;
+                case VKeys.VK_HOME: return 0x47;
+                case VKeys.VK_UP: return 0x48;
+                case VKeys.VK_PRIOR: return 0x49;
+                case VKeys.VK_LEFT: return 0x4B;
+                //case VKeys.VK_CENTER: return 0x4C;
+                case VKeys.VK_RIGHT: return 0x4D;
+                case VKeys.VK_END: return 0x4F;
+                case VKeys.VK_DOWN: return 0x50;
+                case VKeys.VK_NEXT: return 0x51;
+                case VKeys.VK_INSERT: return 0x52;
+                case VKeys.VK_DELETE: return 0x53;
+                default:return 0xFF;
+            }
+            
+        }
+        public const byte MagicCSGObVk = 0x51;
+        public static void SendHardwareKeyDown(VKeys toscanboy)
+        {
+            Console.WriteLine("the hardware boy is " + GetHardwareScan(toscanboy));
+            keybd_event(MagicCSGObVk, GetHardwareScan(toscanboy), 0, 0); //Key down
+        }
+        public static void SendHardwareKeyUp(VKeys toscanboy)
+        {
+            keybd_event(MagicCSGObVk, GetHardwareScan(toscanboy), 0x0002, 0); //Key up
+        }
+
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -27,13 +146,13 @@ namespace BotPS2
 
 
         [DllImport("user32.dll")]
-        static extern IntPtr GetForegroundWindow();
+        public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int GetWindowTextLength(IntPtr hWnd);
+        public static extern int GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         //[DllImport("user32.dll")]
         //static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, Int32 wParam, Int32 lParam);
