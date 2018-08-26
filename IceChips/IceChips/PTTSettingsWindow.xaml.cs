@@ -75,11 +75,13 @@ namespace IceChips
                     break;
                 case "AddBindingButton":
 
-                    BindingBoys.Add(new BindingBoy()
+                    BindingBoy newboy = new BindingBoy()
                     {
-                        WindowName=(string)(WindowNameComboBox.SelectedValue),
-                        Binding=KeyBindingTextBox.Text
-                    });
+                        WindowName = (string)(WindowNameComboBox.SelectedValue),
+                        Binding = KeyBindingTextBox.Text
+                    };
+                    newboy.BindingName = BindingBoy.GetBindingName(newboy.Binding);
+                    BindingBoys.Add(newboy);
                     
 
                     BindingDataGrid.ItemsSource = BindingBoys;
@@ -90,15 +92,26 @@ namespace IceChips
                     break;
                 case "CancelButton":
                     LoadPTTFromFile();
-                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING)
+                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING
+                        || mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING_BEGIN
+                        || mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING_END)
                         mainwindowreference.sm_kp = MainWindow._sm_kp.NORMAL;
                     this.Hide();
 
                     break;
                 case "CloseButton":
-                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING)
+                    if (mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING
+                       || mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING_BEGIN
+                       || mainwindowreference.sm_kp == MainWindow._sm_kp.GET_BINDING_END)
                         mainwindowreference.sm_kp = MainWindow._sm_kp.NORMAL;
                     this.Hide();
+                    break;
+                case "BeginKeybindButton":
+                    mainwindowreference.sm_kp = MainWindow._sm_kp.GET_BINDING_BEGIN;
+                    break;
+
+                case "EndKeybindButton":
+                    mainwindowreference.sm_kp = MainWindow._sm_kp.GET_BINDING_END;
                     break;
             }
         }
@@ -106,11 +119,17 @@ namespace IceChips
         private void SavePTTToFile()
         {
             List<string> lines = new List<string>();
+            lines.Add(""+BindingBoys.Count);
             foreach (var x in BindingBoys)
             {
                 lines.Add(x.WindowName);
-                lines.Add(x.Binding);
+                x.Binding = ""+BindingBoy.ReverseAgain(x.BindingName);
+                lines.Add(x.Binding.ToUpper());
             }
+
+            lines.Add(BeginKeybindTextBox.Text);
+            lines.Add(EndKeybindTextBox.Text);
+
             File.WriteAllLines(PTTSavedSettingsFileName, lines.ToArray());
         }
         private void LoadPTTFromFile()
@@ -119,18 +138,22 @@ namespace IceChips
             {
                 BindingBoys = new ObservableCollection<BindingBoy>();
                 string[] lines = File.ReadAllLines(PTTSavedSettingsFileName);
-                int i = -1;
-                while (i < lines.Length - 1)
+                
+                int bindingcountmax = int.Parse(lines[0])*2;
+                int i = -1 + 1;
+                while (i < bindingcountmax)
                 {
-                    if (lines[i + 1] == "")
-                        break;
+                    
                     BindingBoy boi = new BindingBoy()
                     {
                         WindowName = lines[++i],
                         Binding = lines[++i]
                     };
+                    boi.BindingName = BindingBoy.GetBindingName(boi.Binding);
                     BindingBoys.Add(boi);
                 }
+                BeginKeybindTextBox.Text = lines[++i];
+                EndKeybindTextBox.Text = lines[++i];
 
                 BindingDataGrid.ItemsSource = BindingBoys;
             }

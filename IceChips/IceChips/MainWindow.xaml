@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IceChips"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800"
+        Title="Sorry I am Deaf Girl Sorry My Mic Broke Sorry it's late I cant Use Voice Comms (Reinhardt): Get in voice comms :\" Height="600" Width="800"
         Closing="Window_Closing"
         >
     <Grid>

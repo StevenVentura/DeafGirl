@@ -78,6 +78,7 @@ LOOOOOOOO
             LoadPreviousSettingsFromFile();
             if (VoiceSelector.SelectedIndex == -1)
                 VoiceSelector.SelectedIndex = 0;
+            //VoiceSelector.SelectedValue = TtsVoice.Kit;
             if (SpeakerSelector.SelectedIndex == -1)
                 SpeakerSelector.SelectedIndex = 0;
             if (MicSelector.SelectedIndex == -1)
@@ -119,7 +120,7 @@ LOOOOOOOO
             {
                 string[] lines = File.ReadAllLines(filesettingspath);
                 int i = -1;
-                VoiceSelector.SelectedValue = Enum.Parse(typeof(TtsVoice), lines[++i]);
+                VoiceSelector.SelectedValue = (TtsVoice)Enum.Parse(typeof(TtsVoice), lines[++i]);
                 shroud.Value = Double.Parse(lines[++i]);
                 LucciHear.IsChecked = bool.Parse(lines[++i]);
                 MoonbaseCheckbox.IsChecked = bool.Parse(lines[++i]);
@@ -176,7 +177,7 @@ LOOOOOOOO
         private void GlobalHookKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             var x = e.KeyCode;
-            if (x == Keys.RShiftKey)
+            if (e.KeyCode == (Keys)Enum.Parse(typeof(Keys), pttSettingsWindow.EndKeybindTextBox.Text))
             {
                 PopDownAttachBoy();
             }
@@ -330,14 +331,24 @@ LOOOOOOOO
                     e.Handled = true;
                     break;
                 case _sm_kp.GET_BINDING:
-                    pttSettingsWindow.KeyBindingTextBox.Text = "" + e.KeyValue;
+                    pttSettingsWindow.KeyBindingTextBox.Text = "" + e.KeyCode;
+                    sm_kp = _sm_kp.NORMAL;
+                    e.Handled = true;
+                    break;
+                case _sm_kp.GET_BINDING_BEGIN:
+                    pttSettingsWindow.BeginKeybindTextBox.Text = "" + e.KeyCode;
+                    sm_kp = _sm_kp.NORMAL;
+                    e.Handled = true;
+                    break;
+                case _sm_kp.GET_BINDING_END:
+                    pttSettingsWindow.EndKeybindTextBox.Text = "" + e.KeyCode;
                     sm_kp = _sm_kp.NORMAL;
                     e.Handled = true;
                     break;
 
                 case _sm_kp.NORMAL:
                     
-                    if (x == Keys.RShiftKey)
+                    if (e.KeyCode == (Keys)Enum.Parse(typeof(Keys),pttSettingsWindow.BeginKeybindTextBox.Text))
                     {
                         var foreground = cSendInput.GetForegroundWindow();
                         int length = cSendInput.GetWindowTextLength(foreground);
@@ -566,7 +577,9 @@ LOOOOOOOO
         {
             GET_BINDING,
             NORMAL,
-            TTSMODE
+            TTSMODE,
+            GET_BINDING_BEGIN,
+            GET_BINDING_END
         } ;
         public _sm_kp sm_kp = _sm_kp.NORMAL;
         private void PressAppropriatePTTButton(bool down)
@@ -709,7 +722,8 @@ LOOOOOOOO
         private string CURRENT_VOICESELECTOR_VALUE;
         private void VoiceSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            CURRENT_VOICESELECTOR_VALUE = (string)(VoiceSelector.SelectedValue);
+            if (VoiceSelector.SelectedValue != null)
+                CURRENT_VOICESELECTOR_VALUE = VoiceSelector.SelectedValue.ToString();
             SaveSettingsToFile();
         }
         private bool OVERLAYPLAYBACKCHECKBOXCHECKED = false;

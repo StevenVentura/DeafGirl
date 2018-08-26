@@ -11,7 +11,7 @@
         <DataGrid x:Name="BindingDataGrid" ItemsSource="{Binding Path=BindingBoys, IsAsync=true}" AutoGenerateColumns="False" HorizontalAlignment="Left" Height="197" Margin="22,18,0,0" VerticalAlignment="Top" Width="384">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="window name" Width="*" Binding="{Binding WindowName}"/>
-                <DataGridTextColumn Header="PTT Key" Width="80" Binding="{Binding Binding}"/>
+                <DataGridTextColumn Header="PTT Key" Width="80" Binding="{Binding BindingName}"/>
             </DataGrid.Columns>
         </DataGrid>
            
@@ -26,6 +26,10 @@
         <Button x:Name="CancelButton" Click="ButtonClickBoy" Content="Cancel" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="306,302,0,0"/>
         <Button x:Name="SaveButton" Click="ButtonClickBoy" Content="Save" HorizontalAlignment="Left" Margin="393,302,0,0" VerticalAlignment="Top" Width="75" />
         <Button x:Name="CloseButton" Click="ButtonClickBoy" Content="Close" HorizontalAlignment="Left" Margin="393,329,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button x:Name="BeginKeybindButton" Click="ButtonClickBoy" Content="Begin Keybind..." HorizontalAlignment="Left" Margin="10,313,0,0" VerticalAlignment="Top" Width="107"/>
+        <Button x:Name="EndKeybindButton" Click="ButtonClickBoy" Content="End Keybind..." HorizontalAlignment="Left" Margin="135,313,0,0" VerticalAlignment="Top" Width="107"/>
+        <TextBox x:Name="BeginKeybindTextBox" Focusable="False" HorizontalAlignment="Left" Height="23" Margin="10,340,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="79"/>
+        <TextBox x:Name="EndKeybindTextBox" Focusable="False" HorizontalAlignment="Left" Height="23" Margin="135,340,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="74"/>
 
     </Grid>
 </Window>

@@ -369,38 +369,42 @@ namespace SharpTalk
         /// <param name="input">The input text to process.</param>
         public void SpeakToWavFile(string path, string input)
         {
-            const int headerSize = 44;
-            const int formatChunkSize = 16;
-            const short waveAudioFormat = 1;
-            const short numChannels = 1;
-            const int sampleRate = 11025;
-            const short bitsPerSample = 16;
-            const int byteRate = (numChannels * bitsPerSample * sampleRate) / 8;
-            const short blockAlign = numChannels * bitsPerSample / 8;
-
-            using (var dataStream = new MemoryStream())
+            try
             {
-                SpeakToStream(dataStream, input);
-                var sizeInBytes = (int)dataStream.Length;
-                using (var writer = new BinaryWriter(File.Create(path), Encoding.ASCII))
+                const int headerSize = 44;
+                const int formatChunkSize = 16;
+                const short waveAudioFormat = 1;
+                const short numChannels = 1;
+                const int sampleRate = 11025;
+                const short bitsPerSample = 16;
+                const int byteRate = (numChannels * bitsPerSample * sampleRate) / 8;
+                const short blockAlign = numChannels * bitsPerSample / 8;
+
+                using (var dataStream = new MemoryStream())
                 {
-                    writer.Write("RIFF".ToCharArray());
-                    writer.Write(sizeInBytes + headerSize - 8);
-                    writer.Write("WAVE".ToCharArray());
-                    writer.Write("fmt ".ToCharArray());
-                    writer.Write(formatChunkSize);
-                    writer.Write(waveAudioFormat);
-                    writer.Write(numChannels);
-                    writer.Write(sampleRate);
-                    writer.Write(byteRate);
-                    writer.Write(blockAlign);
-                    writer.Write(bitsPerSample);
-                    writer.Write("data".ToCharArray());
-                    writer.Write(sizeInBytes);
-                    dataStream.Position = 0;
-                    dataStream.CopyTo(writer.BaseStream);
+                    SpeakToStream(dataStream, input);
+                    var sizeInBytes = (int)dataStream.Length;
+                    using (var writer = new BinaryWriter(File.Create(path), Encoding.ASCII))
+                    {
+                        writer.Write("RIFF".ToCharArray());
+                        writer.Write(sizeInBytes + headerSize - 8);
+                        writer.Write("WAVE".ToCharArray());
+                        writer.Write("fmt ".ToCharArray());
+                        writer.Write(formatChunkSize);
+                        writer.Write(waveAudioFormat);
+                        writer.Write(numChannels);
+                        writer.Write(sampleRate);
+                        writer.Write(byteRate);
+                        writer.Write(blockAlign);
+                        writer.Write(bitsPerSample);
+                        writer.Write("data".ToCharArray());
+                        writer.Write(sizeInBytes);
+                        dataStream.Position = 0;
+                        dataStream.CopyTo(writer.BaseStream);
+                    }
                 }
             }
+            catch (Exception e) { }
         }
 
         /// <summary>
